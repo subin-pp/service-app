@@ -1,0 +1,7 @@
+.splash-container {
+  min-height: 100vh;
+  background-color: var(--bs-warning);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+} 

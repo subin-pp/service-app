@@ -1,0 +1,62 @@
+.create-account-container {
+  border: 1px solid #ccc;
+  border-radius: 24px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  width: 350px;
+  margin-bottom: 5px; /* Reduced from 10px to 5px */
+}
+
+.input-field,
+input[type="password"] {  /* Explicitly target password field */
+  border: none;
+  outline: none;
+  flex: 1;
+  padding: 4px 10px;
+  border-radius: 20px;
+  width: calc(100% - 40px);
+  height: 24px;
+  line-height: 24px;
+  font-size: inherit; /* Ensure consistent font size */
+  box-sizing: border-box; /* Include padding in height calculation */
+}
+
+.password-toggle {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0px;
+  width: 40px; /* Fixed width for the eye button */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.submit-button {
+  border: 1px solid #ccc;
+  border-radius: 24px;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 350px;
+  background-color: #ffc107 !important; /* Bootstrap warning yellow with !important */
+  color: #000 !important; /* Black text */
+  border: none !important;
+  margin-top: 10px; /* Add some space above the button */
+}
+
+.submit-button:hover {
+  background-color: #ffca2c !important; /* Slightly lighter yellow on hover */
+}
+
+/* Media query for smaller screens */
+@media screen and (max-width: 480px) {
+  .create-account-container,
+  .submit-button {
+    width: 90%;
+    margin: 10px auto;
+  }
+} 
