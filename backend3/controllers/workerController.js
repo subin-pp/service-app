@@ -46,6 +46,46 @@ exports.uploadWorkerDetails = async (req, res) => {
   }
 };
 
+
+//togglw worker availavibity
+exports.toggleWorkerAvailability = async (req, res) => {
+    try {
+      const { availability } = req.body;
+      const workerId = req.WorkerId; // Use req.WorkerId from JWT middleware
+      
+      // Find and update worker availability
+      const worker = await Worker.findByIdAndUpdate(workerId, { availability }, { new: true });
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+  
+      res.status(200).json({ 
+        message: "Worker availability updated successfully", 
+        availability: worker.availability 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  };
+
+// Get worker details by ID
+exports.getWorkerDetails = async (req, res) => {
+  try {
+      const workerId = req.user.id; // Access worker ID from the decoded JWT payload
+
+      const worker = await Worker.findById(workerId);
+
+      if (!worker) {
+          return res.status(404).json({ message: "Worker not found" });
+      }
+
+      res.status(200).json(worker);
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 // Get all workers pending verification
 // exports.getPendingWorkers = async (req, res) => {
 //   try {
@@ -56,6 +96,8 @@ exports.uploadWorkerDetails = async (req, res) => {
 //       res.status(500).json({ message: "Internal Server Error" });
 //   }
 // };
+
+
 
 
 
@@ -80,6 +122,7 @@ exports.uploadWorkerDetails = async (req, res) => {
 //     res.status(500).json({ message: "Internal server error" });
 //   }
 // };
+
 
 
 

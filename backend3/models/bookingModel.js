@@ -4,6 +4,8 @@ const bookingSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   userName: { type: String, required: true },
   WorkerId: { type: String, required: true },  // Reference to the worker
+  WorkerName: { type: String, required: true }, // Worker name
+  workerPhoneNumber: { type: String, required: true }, // Worker's phone number
   problem: { type: String, required: true }, // Problem description
   address: { type: String, required: true }, // User's address
   latitude: { type: String }, // Latitude for location
@@ -15,5 +17,5 @@ const bookingSchema = new mongoose.Schema({
   status: { type: String, default: 'Pending' } // Booking status (e.g., Pending, Accepted, Rejected)
 });
 
-const booking = mongoose.model('Booking', bookingSchema);
-module.exports = booking
+const Booking = mongoose.model('Booking', bookingSchema);
+module.exports = Booking;

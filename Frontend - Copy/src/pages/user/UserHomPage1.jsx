@@ -9,7 +9,6 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SERVER_URL from '../../services/serverURL';
 import { useNavigate } from 'react-router-dom';
-import { Event as EventIcon } from '@mui/icons-material';
 
 const modalStyle = {
   position: 'absolute',
@@ -26,8 +25,10 @@ const modalStyle = {
 const UserHomPage1 = () => {
   const navigate = useNavigate();
   const [searchRole, setSearchRole] = useState('');
-  const [openModal, setOpenModal] = useState(false);
+  const [openBookingModal, setOpenBookingModal] = useState(false); // Modal for booking
+  const [openBookedDetailsModal, setOpenBookedDetailsModal] = useState(false); // Modal for booked details
   const [selectedWorker, setSelectedWorker] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null); // Selected booking details
   const [bookingDetails, setBookingDetails] = useState({
     problem: '',
     address: '',
@@ -56,7 +57,12 @@ const UserHomPage1 = () => {
 
   const handleBooking = useCallback((worker) => {
     setSelectedWorker(worker);
-    setOpenModal(true);
+    setOpenBookingModal(true);
+  }, []);
+
+  const handleViewBookedDetails = useCallback((booking) => {
+    setSelectedBooking(booking);
+    setOpenBookedDetailsModal(true);
   }, []);
 
   const handleSubmitBooking = async () => {
@@ -71,7 +77,8 @@ const UserHomPage1 = () => {
     try {
       const token = sessionStorage.getItem('token');
       const headers = {
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       };
       const userDetails = JSON.parse(sessionStorage.getItem("userdetails"));
       const userId = userDetails?.id;
@@ -81,6 +88,8 @@ const UserHomPage1 = () => {
         userName,
         userId,
         WorkerId: selectedWorker._id,
+        WorkerName:selectedWorker.fullName,
+        workerPhoneNumber:selectedWorker.phoneNumber,
         problem: bookingDetails.problem,
         address: bookingDetails.address,
         latitude: bookingDetails.latitude,
@@ -98,7 +107,7 @@ const UserHomPage1 = () => {
       }
 
       toast.success('Booking successful!');
-      setOpenModal(false);
+      setOpenBookingModal(false);
       fetchUserBookings(); // Refresh bookings after successful booking
     } catch (error) {
       console.error('Error submitting booking:', error);
@@ -143,11 +152,11 @@ const UserHomPage1 = () => {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-      console.log('Fetching user bookings with headers:', headers);
       const response = await getUserBookingByIdAPI(headers);
-      console.log('User bookings response:', response);
       if (response && response.data) {
         setUserBookings(response.data);
+        // console.log("bookings",userBookings);
+        
       } else {
         setUserBookings([]);
       }
@@ -166,7 +175,7 @@ const UserHomPage1 = () => {
     const status = getBookingStatusForWorker(workerId);
     switch (status) {
       case 'Pending':
-        return { text: 'Pending', color: '#007BFF' }; // Yellow for pending
+        return { text: 'Pending', color: '#007BFF' }; // Blue for pending
       case 'Accepted':
         return { text: 'Accepted', color: '#4caf50' }; // Green for accepted
       case 'Rejected':
@@ -187,10 +196,10 @@ const UserHomPage1 = () => {
           "Authorization": `Bearer ${token}`,
         };
         const response = await getVerifiedAvailableWorkerDetailsAPI(headers);
-        console.log('Workers response:', response);
-
         if (Array.isArray(response.data)) {
           setPendingWorkers(response.data);
+          console.log(response.data);
+          
         } else {
           setPendingWorkers([]);
         }
@@ -234,6 +243,13 @@ const UserHomPage1 = () => {
                   ),
                 }}
               />
+              <Button 
+                style={{backgroundColor:"#ffca2c", height: '50px', width: '150px'}} 
+                variant="contained"
+                onClick={() => setOpenBookedDetailsModal(true)} // Open booked details modal
+              >
+                Bookings
+              </Button>
             </Grid>
           </Grid>
         </Box>
@@ -250,7 +266,7 @@ const UserHomPage1 = () => {
                 <Grid item xs={12} sm={6} md={4} key={worker._id}>
                   <Card sx={{ height: '100%' }}>
                     <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center',  mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Avatar
                           src={`${SERVER_URL}/${worker.profilePic}`}
                           sx={{ width: 60, height: 60, mr: 2 }}
@@ -264,7 +280,7 @@ const UserHomPage1 = () => {
                         Experience: {worker.experience} years
                       </Typography>
                       <Button 
-                        style={{ backgroundColor: buttonColor }} 
+                        style={{ backgroundColor: buttonColor, color: "white" }} 
                         variant="contained"
                         fullWidth
                         onClick={() => handleBooking(worker)}
@@ -280,7 +296,8 @@ const UserHomPage1 = () => {
           </Grid>
         )}
 
-        <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        {/* Modal for Booking */}
+        <Modal open={openBookingModal} onClose={() => setOpenBookingModal(false)}>
           <Box sx={modalStyle}>
             <Typography variant="h6" sx={{ mb: 3 }}>
               Book {selectedWorker?.fullName}
@@ -404,6 +421,42 @@ const UserHomPage1 = () => {
             >
               Submit Booking
             </Button>
+          </Box>
+        </Modal>
+
+        {/* Modal for Booked Details */}
+        <Modal open={openBookedDetailsModal} onClose={() => setOpenBookedDetailsModal(false)}>
+          <Box sx={modalStyle}>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Booked Details
+            </Typography>
+            {userBookings.length > 0 ? (
+              userBookings.map((booking) => (
+                <Box key={booking._id} sx={{ mb: 3 }}>
+                  <Typography variant="body1" sx={{ mb: 1 }}>
+                    <strong>Worker Name:</strong> {booking.WorkerName}
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 1 }}>
+                    <strong>Worker Phone Number:</strong> {booking.workerPhoneNumber}
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 1 }}>
+                    <strong>Booking Status:</strong> {booking.status}
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 1 }}>
+                    <strong>Booking Time:</strong> {booking.time}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleViewBookedDetails(booking)}
+                  >
+                    
+                  </Button>
+                </Box>
+              ))
+            ) : (
+              <Typography variant="body1">No bookings found.</Typography>
+            )}
           </Box>
         </Modal>
       </Container>

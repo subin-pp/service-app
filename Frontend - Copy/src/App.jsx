@@ -16,6 +16,7 @@ import WorkerHistory from "./pages/worker/WorkerHistory";
 import WorkerVerification from "./pages/admin/WorkerVerification";
 import UserBookings from "./pages/user/userBookings";
 import { WorkerProvider } from "./WorkerContext1";
+import BlockedAccountModal from "./componets/BlockedAccountModal";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<SplashPage />} />
+          <Route path="/blocked" element={<BlockedAccountModal />} />
           <Route path="/select-user-type" element={<SelectUserType />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/create-account" element={<CreateAccountPage />} />

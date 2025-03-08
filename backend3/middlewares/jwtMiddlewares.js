@@ -12,12 +12,12 @@ const jwtMiddleware = (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    console.log("token : ", token);
+    // console.log("token : ", token);
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        console.log("decoded :", decoded);
+        // console.log("decoded :", decoded);
 
         // Attach the userId and WorkerId to the request object
         req.user = decoded; // Attach the entire decoded payload

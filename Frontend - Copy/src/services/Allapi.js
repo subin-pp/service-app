@@ -89,3 +89,14 @@ export const getUserBookingByIdAPI = async (reqHeader) => {
     return await commonAPI("PUT", `${SERVER_URL}/unblock-user/${userId}`, {}, reqHeader);
   };
 
+  // toggle worker availability
+   export const toggleWorkerAvailabilityAPI = async (reqHeader,WorkerId,reqBody) => {
+    return await commonAPI("PUT", `${SERVER_URL}/toggle-availability/${WorkerId}`,reqBody, reqHeader);
+  };
+
+  //get worker details for checking is he verified 
+  export const getLoginWorkerAPI = async (reqHeader) => {
+    return await commonAPI("GET", `${SERVER_URL}/worker-details`,{}, reqHeader);
+  };
+
+  

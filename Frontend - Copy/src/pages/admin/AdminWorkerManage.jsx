@@ -25,8 +25,13 @@ const AdminWorkerManage = () => {
       }
       const headers = { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" };
       const response = await getVerifiedWorkerAPI(headers);
+      console.log("API Response:", response.data); // Debugging
       if (response.status === 200) {
-        setWorkers(response.data);
+        const workersWithDefaultStatus = response.data.map(worker => ({
+          ...worker,
+          status: worker.status || "active", // Default to "active" if status is missing
+        }));
+        setWorkers(workersWithDefaultStatus);
       } else {
         toast.error("Failed to fetch worker data");
       }
@@ -124,7 +129,6 @@ const AdminWorkerManage = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={{ width: '250px' }}
                 />
-                
               </div>
             </div>
 

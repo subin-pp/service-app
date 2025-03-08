@@ -171,12 +171,12 @@ const WorkerVerification = () => {
                       >
                         Approve
                       </button>
-                      {/* <button
+                      <button
                         className="btn btn-danger"
                         onClick={() => handleReject(selectedWorker._id)} // Use _id instead of id
                       >
                         Reject
-                      </button> */}
+                      </button>
                     </div>
                   </div>
                 </div>

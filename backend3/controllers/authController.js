@@ -150,6 +150,7 @@ exports.loginController = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        isBlocked:user.isBlocked
       },
     });
   } catch (error) {
@@ -157,3 +158,5 @@ exports.loginController = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+

@@ -12,17 +12,18 @@ exports.createBooking = async (req, res) => {
   try {
     console.log(req.body);
 
-    const { userName, userId, WorkerId, problem, address, latitude, longitude, date, time, phoneNumber, serviceType } = req.body;
+    const { userName, userId, WorkerId, WorkerName, workerPhoneNumber, problem, address, latitude, longitude, date, time, phoneNumber, serviceType } = req.body;
     console.log(WorkerId);
 
     // Validate required fields
-    if (!userName || !userId || !WorkerId || !problem || !address || !date || !time || !phoneNumber || !serviceType) {
+    if (!userName || !userId || !WorkerId || !WorkerName || !workerPhoneNumber || !problem || !address || !date || !time || !phoneNumber || !serviceType) {
       return res.status(400).json({ message: 'All fields are required' });
+      
+      
     }
 
     // Check if the user has already booked this worker
     const existingBooking = await Booking.findOne({ userId, WorkerId });
-
     if (existingBooking) {
       return res.status(400).json({ message: 'You have already booked this worker' });
     }
@@ -30,8 +31,10 @@ exports.createBooking = async (req, res) => {
     // Create a new booking
     const booking = new Booking({
       userName,
-      userId,
+      userId, 
       WorkerId,
+      WorkerName,  
+      workerPhoneNumber, // Added this field
       problem,
       address,
       latitude,
@@ -51,6 +54,7 @@ exports.createBooking = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 
 
@@ -168,26 +172,31 @@ exports.updateBookingStatus = async (req, res) => {
 
 
 
-// Delete a booking 
+// booking reject a booking 
 exports.deleteBooking = async (req, res) => {
-  console.log("insode of the Failed to delete booking request  ");
-  
+  console.log("Inside the failed booking request update");
+
   try {
     const { bookingId } = req.params;
 
-    // Delete the booking
-    const booking = await Booking.findByIdAndDelete(bookingId);
+    // Update the booking status to 'Rejected' instead of deleting it
+    const booking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { status: "Rejected" },
+      { new: true } // Return updated document
+    );
 
     if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
+      return res.status(404).json({ message: "Booking not found" });
     }
 
-    res.status(200).json({ message: 'Booking deleted successfully' });
+    res.status(200).json({ message: "Booking status updated to Rejected", booking });
   } catch (error) {
-    console.error('Error deleting booking:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error updating booking status:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // Get all bookings for the authenticated user
 exports.getUserBookings = async (req, res) => {

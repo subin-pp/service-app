@@ -82,18 +82,29 @@ const LoginPage = () => {
           },
         });
   
-        // Store token and role
+       // Store token and role
         sessionStorage.setItem("token", result.data.token);
-        sessionStorage.setItem("role", result.data.role); // Store role from backend response
+        sessionStorage.setItem("role", result.data.role);
         sessionStorage.setItem("userdetails", JSON.stringify(result.data.user));
-
-  
-        // Navigate after success
+        
+        const isBlocked = result.data.user.isBlocked;
+        const role = result.data.user.role; 
+        
         setTimeout(() => {
           setIsLoading(false);
-          const role = result.data.user.role; // Get role from backend response          
-          console.log(role);
+           
+          console.log("blocked",isBlocked);
           
+          // Check if user is blocked
+          if (isBlocked) {
+            console.log("blocked user");
+            navigate("/blocked");
+           
+            
+            return;
+          }
+
+          // Navigate based on role
           switch (role) {
             case "user":
               navigate("/user-home");

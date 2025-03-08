@@ -7,9 +7,10 @@ const { uploadWorkerDetails } = require("../controllers/workerController");
 const { getPendingWorkers, verifyWorker } = require("../controllers/adminController"); // Import admin functions
 const userController = require('../controllers/userController')
 const adminController = require('../controllers/adminController')
-
+const workerController = require('../controllers/workerController')
 
 router.post("/register", authController.registerController);
+
 router.post("/login", authController.loginController);
 
 // Upload worker details with authentication
@@ -43,5 +44,12 @@ router.put("/block-user/:id", jwtMiddleware, adminController.blockUser);
 
 // Unblock a user
 router.put("/unblock-user/:id", jwtMiddleware, adminController.unblockUser);
+
+//toggle worker avaivability 
+router.put("/toggle-availability/:workerId",jwtMiddleware, workerController.toggleWorkerAvailability);
+
+//get worker details by his id , we need to check login worker is verifeid or not
+router.get("/worker-details", jwtMiddleware, workerController.getWorkerDetails);
+
 
 module.exports = router;

@@ -4,7 +4,7 @@ const Worker = require("../models/workerModel");
 exports.getAvailableAndVerifiedWorkers = async (req, res) => {
   try {
     // Fetch workers who are available and verified
-    const workers = await Worker.find({ availability: true, isVerified: true });
+    const workers = await Worker.find({ availability: true, isVerified: true,isBlocked:false });
     // console.log("worker",workers);
     
 

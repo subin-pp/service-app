@@ -2,23 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../componets/Header';
 import Footer from '../../componets/Footer';
-import { Form, Button, Card } from 'react-bootstrap';
+import {  Button, Card } from 'react-bootstrap';
 import { FaCheckCircle, FaHistory } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { deleteBookingWhenWorkerRejectAPI, getBookingByIdAPI, updateWorkeStatusByWorkerAPI } from '../../services/Allapi';
+import { deleteBookingWhenWorkerRejectAPI, getBookingByIdAPI, getLoginWorkerAPI, toggleWorkerAvailabilityAPI, updateWorkeStatusByWorkerAPI } from '../../services/Allapi';
 import { toast } from 'react-toastify';
 import { ToastContainer } from 'react-toastify';
+import Carousel1 from '../../componets/Carousel1';
+import Switch from 'react-switch';
 
 const WorkerHomePage1 = () => {
   const [isOnline, setIsOnline] = useState(false);
-  const [clientRequests, setClientRequests] = useState([]); // Initialize with an empty array
+  const [clientRequests, setClientRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  const [workerDetails,setWorkerDetails] = useState({})
   const navigate = useNavigate();
 
-  const cardStyle = {
-    boxShadow: 'none',
-    border: '1px solid rgba(0,0,0,.125)'
-  };
+  useEffect(() => {
+    // Check if the form has been submitted
+    const formSubmitted = sessionStorage.getItem("isFormSubmitted");
+    if (formSubmitted) {
+      setIsFormSubmitted(true);
+    }
+  }, []);
 
   // Fetch client requests from the API
   const fetchClientRequests = async () => {
@@ -30,7 +37,7 @@ const WorkerHomePage1 = () => {
       };
       const response = await getBookingByIdAPI(headers);
       console.log(response.data);
-  
+
       if (Array.isArray(response.data)) {
         setClientRequests(response.data);
       } else {
@@ -41,11 +48,40 @@ const WorkerHomePage1 = () => {
       setClientRequests([]);
     }
   };
-  
-  useEffect(() => {
-    fetchClientRequests();
-  }, []); 
 
+;
+
+  // Toggle worker availability
+  const handleToggleAvailability = async () => {
+    try {
+      setIsOnline((prev) => !prev);
+
+      const token = sessionStorage.getItem("token");
+      const userDetails = JSON.parse(sessionStorage.getItem("userdetails"));
+
+      if (!userDetails || !userDetails.id) {
+        console.error("Worker ID not found in session storage");
+        return;
+      }
+
+      const WorkerId = userDetails.id;
+
+      const reqHeader = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+
+      const reqBody = {
+        availability: !isOnline,
+      };
+
+      const response = await toggleWorkerAvailabilityAPI(reqHeader, WorkerId, reqBody);
+      console.log(response);
+    } catch (error) {
+      console.error("Error updating availability:", error);
+      setIsOnline((prev) => !prev);
+    }
+  };
 
   // Update booking status (accept/reject)
   const handleAcceptRequest = async (bookingId, status) => {
@@ -55,25 +91,19 @@ const WorkerHomePage1 = () => {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       };
-      // console.log(reqHeader);
-      
-      const reqBody = { status }; // Use the status parameter
+
+      const reqBody = { status };
 
       const response = await updateWorkeStatusByWorkerAPI(reqHeader, reqBody, bookingId);
 
       if (response?.status === 200) {
         toast.success("Booking status updated successfully!", { position: "top-center" });
-        console.log("Booking status updated successfully", response.data);
-        // Update the clientRequests state to reflect the change
         setClientRequests(clientRequests.map(request =>
           request._id === bookingId ? { ...request, status } : request
         ));
-        setSelectedRequest(null); // Close the details view
+        setSelectedRequest(null);
       } else {
         toast.error("Failed to update booking status", { position: "top-center" });
-        console.log(response);
-        
-        console.log("Failed to update booking status");
       }
     } catch (error) {
       console.error("Error updating booking status:", error);
@@ -81,31 +111,24 @@ const WorkerHomePage1 = () => {
     }
   };
 
-  //delete the user request when he click on the reject 
+  // Delete the user request when he clicks on the reject button
   const handleRejectRequest = async (bookingId) => {
     try {
       const token = sessionStorage.getItem('token');
-      console.log("Token:", token);
-  
       const reqHeader = {
         "Content-Type": "application/json",
         "authorization": `Bearer ${token}`,
       };
-  
+
       const response = await deleteBookingWhenWorkerRejectAPI(reqHeader, bookingId);
       console.log(response);
-  
+
       if (response?.status === 200) {
         toast.success("Booking request deleted successfully!", { position: "top-center" });
-  
-        // Remove the deleted booking from the state
         setClientRequests(clientRequests.filter(request => request._id !== bookingId));
-  
-        // 🔴 Close the details section if the deleted request was selected
         if (selectedRequest && selectedRequest._id === bookingId) {
           setSelectedRequest(null);
         }
-  
       } else {
         toast.error("Failed to delete booking request", { position: "top-center" });
       }
@@ -114,38 +137,70 @@ const WorkerHomePage1 = () => {
       toast.error("Something went wrong", { position: "top-center" });
     }
   };
-  
+ 
+  //get worker details for check if he is verified or not
+  const getWorkerDetails =async()=>{
+   try {
+    const token = sessionStorage.getItem('token');
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    };
+
+    const response = await getLoginWorkerAPI(headers);
+    if(response.status == 200){
+      console.log(response);
+      setWorkerDetails(response.data)
+      
+      
+      
+    }
+   } catch (error) {
+    console.log(error);
+    
+   }
+  }
+
+
+  useEffect(() => {
+    fetchClientRequests();
+    getWorkerDetails()
+  }, [])
+
 
   // Open booking details
   const handleOpen = (request) => {
     setSelectedRequest(request);
   };
-
   return (
     <>
-    <ToastContainer/>
+      <ToastContainer />
       <Header />
       <div className="container py-4 has-header">
         {/* Welcome and Toggle Section */}
         <div className="mb-4 p-3" style={{ backgroundColor: '#fff' }}>
           <div className="d-flex justify-content-between align-items-center">
-          <div className="d-flex  flex-column flex-sm-row gap-2">
+            <div className="d-flex flex-column align-items-center flex-sm-row gap-1">
               <h1 className="mb-0 me-4">
                 Welcome <span className="text-primary">{JSON.parse(sessionStorage.getItem("userdetails"))?.fullName || "Guest"}</span>
               </h1>
+              
+              {/* verification badge */}
+              <div>
+                {
+                  workerDetails.isVerified ? 
+                  <i className="fas fa-check-circle fa-2x" style={{ color: "green" }}></i> : 
+                  <i className="fas fa-times-circle fa-2x" style={{ color: "red" }}></i>
+                }
+              </div>
 
-              {/* Worker history */}
-              <Button
-                variant="outline-primary"
-                className="rounded-pill d-flex align-items-center"
-                onClick={() => navigate('/worker/history')}
-              >
-                <FaHistory className="me-2" />
-                View History
-              </Button>
 
-              {/* Worker active account section */}
-              <Button
+              
+
+              {/* Conditionally render the "Activate" button */}
+              { workerDetails.isVerified ?  
+                <div></div>
+                :<Button
                 variant="outline-success"
                 className="rounded-pill d-flex align-items-center"
                 onClick={() => navigate('/worker-form')}
@@ -153,77 +208,34 @@ const WorkerHomePage1 = () => {
                 <FaCheckCircle className="me-2" />
                 Activate
               </Button>
+                
+              }
             </div>
             <div className="d-flex align-items-center">
-              <span className={`me-2 ${isOnline ? 'text-success' : 'text-danger'}`}>{isOnline ? 'Online' : 'Offline'}</span>
-              <Form.Check type="switch" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
-            </div>
+      <span className={`me-2 ${isOnline ? "text-success" : "text-danger"}`}>
+        {isOnline ? "Online" : "Offline"}
+      </span>
+      <Switch
+        checked={isOnline}
+        onChange={handleToggleAvailability}
+        onColor="#86d3ff"
+        onHandleColor="#2693e6"
+        handleDiameter={20}
+        uncheckedIcon={false}
+        checkedIcon={false}
+        boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
+        activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
+        height={15}
+        width={40}
+        className="react-switch"
+        id="material-switch"
+      />
+    </div>
           </div>
         </div>
-
-        {/* Statistics Cards */}
-        <div className="row mb-4">
-          {/* Total Work Card */}
-          <div className="col-md-4 mb-3 mb-md-0">
-            <div className="card h-100" style={cardStyle}>
-              <div className="card-body text-center">
-                <h2 className="display-4 text-primary mb-2">25</h2>
-                <p className="text-muted mb-3">Total Work Taken</p>
-                <div className="progress">
-                  <div
-                    className="progress-bar bg-primary"
-                    role="progressbar"
-                    style={{ width: '75%' }}
-                    aria-valuenow="75"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Login Hours Card */}
-          <div className="col-md-4 mb-3 mb-md-0">
-            <div className="card h-100" style={cardStyle}>
-              <div className="card-body text-center">
-                <h2 className="display-4 text-success mb-2">8.5</h2>
-                <p className="text-muted mb-3">Login Hours</p>
-                <div className="progress">
-                  <div
-                    className="progress-bar bg-success"
-                    role="progressbar"
-                    style={{ width: '50%' }}
-                    aria-valuenow="50"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Daily Login Card */}
-          <div className="col-md-4">
-            <div className="card h-100" style={cardStyle}>
-              <div className="card-body text-center">
-                <h2 className="display-4 text-info mb-2">15</h2>
-                <p className="text-muted mb-3">Daily Login</p>
-                <div className="progress">
-                  <div
-                    className="progress-bar bg-info"
-                    role="progressbar"
-                    style={{ width: '66%' }}
-                    aria-valuenow="66"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div>
+          <Carousel1/>
         </div>
-
         {/* Client Requests Section */}
         <div className="mb-4">
           <h3>Client Requests</h3>
@@ -253,7 +265,6 @@ const WorkerHomePage1 = () => {
           )}
         </div>
 
-
         {/* Location Interface with Map */}
         {selectedRequest && (
           <div className="mt-4 p-4 rounded" style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
@@ -279,7 +290,7 @@ const WorkerHomePage1 = () => {
                     </Button>
                     <Button
                       variant="danger"
-                      onClick={()=>handleRejectRequest(selectedRequest._id)}
+                      onClick={() => handleRejectRequest(selectedRequest._id)}
                     >
                       Reject
                     </Button>
@@ -287,7 +298,6 @@ const WorkerHomePage1 = () => {
                 </div>
               </div>
               <div className="col-md-8">
-                {/* Google Maps iframe without API key */}
                 <iframe
                   width="100%"
                   height="400"
