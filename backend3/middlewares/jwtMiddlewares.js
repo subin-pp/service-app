@@ -4,10 +4,10 @@ const jwtMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
     console.log(authHeader);
 
-    console.log("inside of the jwtMiddleware");
+    // console.log("inside of the jwtMiddleware");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        console.log("no token");
+        // console.log("no token");
         return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
 
