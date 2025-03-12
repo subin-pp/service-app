@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Container, Grid, Card, CardContent, Typography, TextField, Button, Modal, Box, Avatar } from '@mui/material';
-import { Search as SearchIcon, MyLocation as MyLocationIcon } from '@mui/icons-material';
+import { Container, Grid, Card, CardContent, Typography, TextField, Button, Modal, Box, Avatar, IconButton, Divider } from '@mui/material';
+import { Search as SearchIcon, MyLocation as MyLocationIcon, Close, AccountBalanceWallet, Payment } from '@mui/icons-material';
 import Header from '../../componets/Header';
 import Footer from '../../componets/Footer';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -27,6 +27,7 @@ const UserHomPage1 = () => {
   const [searchRole, setSearchRole] = useState('');
   const [openBookingModal, setOpenBookingModal] = useState(false); // Modal for booking
   const [openBookedDetailsModal, setOpenBookedDetailsModal] = useState(false); // Modal for booked details
+  const [openPaymentModal, setOpenPaymentModal] = useState(false); // Modal for payment gateway
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null); // Selected booking details
   const [bookingDetails, setBookingDetails] = useState({
@@ -60,11 +61,7 @@ const UserHomPage1 = () => {
     setOpenBookingModal(true);
   }, []);
 
-  const handleViewBookedDetails = useCallback((booking) => {
-    setSelectedBooking(booking);
-    setOpenBookedDetailsModal(true);
-  }, []);
-
+ 
   const handleSubmitBooking = async () => {
     const requiredFields = ['problem', 'address', 'date', 'time', 'phoneNumber', 'serviceType'];
     const missingFields = requiredFields.filter(field => !bookingDetails[field]);
@@ -88,8 +85,8 @@ const UserHomPage1 = () => {
         userName,
         userId,
         WorkerId: selectedWorker._id,
-        WorkerName:selectedWorker.fullName,
-        workerPhoneNumber:selectedWorker.phoneNumber,
+        WorkerName: selectedWorker.fullName,
+        workerPhoneNumber: selectedWorker.phoneNumber,
         problem: bookingDetails.problem,
         address: bookingDetails.address,
         latitude: bookingDetails.latitude,
@@ -152,17 +149,18 @@ const UserHomPage1 = () => {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
+
       const response = await getUserBookingByIdAPI(headers);
-      if (response && response.data) {
+      console.log(response);
+
+      if (response.status >= 200 && response.status < 300) {
         setUserBookings(response.data);
-        // console.log("bookings",userBookings);
-        
       } else {
-        setUserBookings([]);
+        console.log("Error fetching the bookings");
       }
     } catch (error) {
-      console.error('Error fetching user bookings:', error);
-      toast.error('Failed to fetch bookings');
+      console.error("Error fetching user bookings:", error);
+      toast.error("Failed to fetch bookings");
     }
   };
 
@@ -198,8 +196,6 @@ const UserHomPage1 = () => {
         const response = await getVerifiedAvailableWorkerDetailsAPI(headers);
         if (Array.isArray(response.data)) {
           setPendingWorkers(response.data);
-          console.log(response.data);
-          
         } else {
           setPendingWorkers([]);
         }
@@ -220,7 +216,10 @@ const UserHomPage1 = () => {
   return (
     <>
       <Header />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container style={{minHeight:'100vh'}} maxWidth="lg" sx={{ py: 4 }}>
+      <h1 className="mb-3 me-4">
+          Welcome <span className="text-primary">{JSON.parse(sessionStorage.getItem("userdetails"))?.fullName || "Guest"}</span>
+      </h1>
         <Box sx={{ mb: 4 }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={6} className='d-flex gap-3 align-items-center'>
@@ -232,8 +231,8 @@ const UserHomPage1 = () => {
                 onChange={(e) => setSearchRole(e.target.value)}
                 InputProps={{
                   endAdornment: (
-                    <Button 
-                      style={{backgroundColor:"#ffca2c"}} 
+                    <Button
+                      style={{ backgroundColor: "#ffca2c" }}
                       variant="contained"
                       onClick={handleSearch}
                       startIcon={<SearchIcon />}
@@ -243,13 +242,7 @@ const UserHomPage1 = () => {
                   ),
                 }}
               />
-              <Button 
-                style={{backgroundColor:"#ffca2c", height: '50px', width: '150px'}} 
-                variant="contained"
-                onClick={() => setOpenBookedDetailsModal(true)} // Open booked details modal
-              >
-                Bookings
-              </Button>
+             
             </Grid>
           </Grid>
         </Box>
@@ -279,15 +272,29 @@ const UserHomPage1 = () => {
                       <Typography variant="body2" sx={{ mb: 1 }}>
                         Experience: {worker.experience} years
                       </Typography>
-                      <Button 
-                        style={{ backgroundColor: buttonColor, color: "white" }} 
-                        variant="contained"
-                        fullWidth
-                        onClick={() => handleBooking(worker)}
-                        disabled={buttonText !== 'Book Now'} // Disable button if status is not 'Book Now'
-                      >
-                        {buttonText}
-                      </Button>
+                      <div className='d-flex align-items-center gap-2' style={{ width: "100%" }}>
+                        <div style={{ flex: 1 }}>
+                          <Button
+                            style={{ backgroundColor: buttonColor, color: "white", width: "100%" }}
+                            variant="contained"
+                            onClick={() => handleBooking(worker)}
+                            disabled={buttonText !== 'Book Now'} // Disable button if status is not 'Book Now'
+                          >
+                            {buttonText}
+                          </Button>
+                        </div>
+
+                        {getBookingStatusForWorker(worker._id) === "Accepted" && (
+                          <div>
+                            <Button
+                              onClick={() => setOpenPaymentModal(true)}
+                              style={{ backgroundColor: buttonColor, color: "white", padding: "5px 10px" }}
+                            >
+                              Confirm
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -360,7 +367,7 @@ const UserHomPage1 = () => {
                   variant={locationStatus.accessed ? "contained" : "outlined"}
                   startIcon={<MyLocationIcon />}
                   onClick={handleGetLocation}
-                  sx={{ 
+                  sx={{
                     mb: 1,
                     bgcolor: locationStatus.accessed ? '#4caf50' : 'inherit',
                     '&:hover': {
@@ -371,12 +378,12 @@ const UserHomPage1 = () => {
                   Use Current Location
                 </Button>
                 {locationStatus.message && (
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
+                  <Typography
+                    variant="caption"
+                    sx={{
                       display: 'block',
                       color: locationStatus.accessed ? '#4caf50' : 'error.main',
-                      ml: 1 
+                      ml: 1
                     }}
                   >
                     {locationStatus.message}
@@ -412,8 +419,8 @@ const UserHomPage1 = () => {
                 />
               </Grid>
             </Grid>
-            <Button 
-              style={{backgroundColor:"#ffca2c"}} 
+            <Button
+              style={{ backgroundColor: "#ffca2c" }}
               variant="contained"
               fullWidth
               onClick={handleSubmitBooking}
@@ -424,44 +431,117 @@ const UserHomPage1 = () => {
           </Box>
         </Modal>
 
-        {/* Modal for Booked Details */}
-        <Modal open={openBookedDetailsModal} onClose={() => setOpenBookedDetailsModal(false)}>
-          <Box sx={modalStyle}>
-            <Typography variant="h6" sx={{ mb: 3 }}>
-              Booked Details
+        {/* Modal for Payment Gateway */}
+        <Modal
+          open={openPaymentModal}
+          onClose={() => setOpenPaymentModal(false)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+              padding: "24px",
+              width: "400px",
+              maxWidth: "90%",
+            }}
+          >
+            {/* Header */}
+            <Box
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <Typography variant="h6" style={{ fontWeight: "bold" }}>
+                Payment
+              </Typography>
+              <IconButton onClick={() => setOpenPaymentModal(false)} style={{ padding: "0" }}>
+                <Close style={{ fontSize: "24px" }} />
+              </IconButton>
+            </Box>
+
+            {/* Booking Details */}
+            <Typography variant="body1" style={{ marginBottom: "16px" }}>
+              <strong>Worker Name:</strong> {userBookings[0]?.WorkerName}
             </Typography>
-            {userBookings.length > 0 ? (
-              userBookings.map((booking) => (
-                <Box key={booking._id} sx={{ mb: 3 }}>
-                  <Typography variant="body1" sx={{ mb: 1 }}>
-                    <strong>Worker Name:</strong> {booking.WorkerName}
-                  </Typography>
-                  <Typography variant="body1" sx={{ mb: 1 }}>
-                    <strong>Worker Phone Number:</strong> {booking.workerPhoneNumber}
-                  </Typography>
-                  <Typography variant="body1" sx={{ mb: 1 }}>
-                    <strong>Booking Status:</strong> {booking.status}
-                  </Typography>
-                  <Typography variant="body1" sx={{ mb: 1 }}>
-                    <strong>Booking Time:</strong> {booking.time}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => handleViewBookedDetails(booking)}
-                  >
-                    
-                  </Button>
-                </Box>
-              ))
-            ) : (
-              <Typography variant="body1">No bookings found.</Typography>
-            )}
+            <Typography variant="body1" style={{ marginBottom: "16px" }}>
+              <strong>Amount:</strong> ₹500
+            </Typography>
+
+            <Divider style={{ margin: "16px 0" }} />
+
+            {/* Payment Method Selection */}
+            <Typography variant="body1" style={{ marginBottom: "16px", fontWeight: "bold" }}>
+              Choose Payment Method
+            </Typography>
+
+            <Grid container spacing={2} style={{ marginBottom: "20px" }}>
+              <Grid item xs={6}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<AccountBalanceWallet style={{ fontSize: "20px" }} />}
+                  style={{
+                    border: "1px solid #1976d2",
+                    color: "#1976d2",
+                    padding: "10px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  Wallet
+                </Button>
+              </Grid>
+              <Grid item xs={6}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<Payment style={{ fontSize: "20px" }} />}
+                  style={{
+                    border: "1px solid #1976d2",
+                    color: "#1976d2",
+                    padding: "10px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  UPI
+                </Button>
+              </Grid>
+            </Grid>
+
+            {/* UPI Payment Section */}
+            <TextField
+              fullWidth
+              label="Enter UPI ID"
+              variant="outlined"
+              style={{ marginBottom: "16px" }}
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              style={{
+                backgroundColor: "#1976d2",
+                color: "#ffffff",
+                padding: "12px",
+                borderRadius: "8px",
+                fontWeight: "bold",
+              }}
+            >
+              Pay Now
+            </Button>
           </Box>
         </Modal>
       </Container>
       <Footer />
-      <ToastContainer/>
+      <ToastContainer />
     </>
   );
 };

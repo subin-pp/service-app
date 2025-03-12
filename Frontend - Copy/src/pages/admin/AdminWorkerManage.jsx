@@ -14,7 +14,8 @@ const AdminWorkerManage = () => {
 
   useEffect(() => {
     getAllVerifiedWorkerDetails();
-  }, []);
+    
+  }, [workers]);
 
   const getAllVerifiedWorkerDetails = async () => {
     try {
@@ -27,11 +28,8 @@ const AdminWorkerManage = () => {
       const response = await getVerifiedWorkerAPI(headers);
       console.log("API Response:", response.data); // Debugging
       if (response.status === 200) {
-        const workersWithDefaultStatus = response.data.map(worker => ({
-          ...worker,
-          status: worker.status || "active", // Default to "active" if status is missing
-        }));
-        setWorkers(workersWithDefaultStatus);
+        const workers = response.data
+        setWorkers(workers);
       } else {
         toast.error("Failed to fetch worker data");
       }
@@ -88,15 +86,7 @@ const AdminWorkerManage = () => {
     }
   };
 
-  const getStatusText = (status) => {
-    const statusStyles = {
-      active: { color: 'green', text: 'Active' },
-      blocked: { color: 'red', text: 'Blocked' },
-      pending: { color: 'orange', text: 'Pending' }
-    };
-    const style = statusStyles[status] || { color: 'black', text: status || 'Unknown' };
-    return <span style={{ color: style.color }}>{style.text}</span>;
-  };
+  
 
   const filteredWorkers = workers.filter(worker => {
     if (filter === 'all') return true;
@@ -163,7 +153,10 @@ const AdminWorkerManage = () => {
                     <td>{worker.totalWorkTaken}</td>
                     <td>{worker.place}</td>
                     <td>{worker.age}</td>
-                    <td>{getStatusText(worker.status)}</td>
+                    <td style={{ color: worker.isBlocked ? "red" : "green" }}>
+                      {worker.isBlocked ? "Blocked" : "Active"}
+                    </td>
+
                     <td>
                       {worker.resume ? (
                         <Button variant="info" size="sm" href={`${SERVER_URL}/${worker.resume}`} target="_blank">See Resume</Button>
@@ -179,7 +172,7 @@ const AdminWorkerManage = () => {
                       )}
                     </td>
                     <td>
-                      {worker.status === 'blocked' ? (
+                      {worker.isBlocked ? (
                         <Button variant="success" size="sm" onClick={() => handleUnblockWorker(worker._id)}>Unblock</Button>
                       ) : (
                         <Button variant="danger" size="sm" onClick={() => handleBlockWorker(worker._id)}>Block</Button>

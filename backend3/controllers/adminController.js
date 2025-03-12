@@ -5,7 +5,7 @@ const User = require('../models/userModel')
 exports.getPendingWorkers = async (req, res) => {
     try {
         const pendingWorkers = await Worker.find({ isVerified: false, resume: { $ne: "" } }); 
-        console.log(pendingWorkers);
+        // console.log(pendingWorkers);
         
         res.status(200).json(pendingWorkers);
     } catch (error) {

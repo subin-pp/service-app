@@ -15,7 +15,7 @@ const workerSchema = new mongoose.Schema({
   totalWorkTaken: { type: Number, default: 0 },
   loginHours: { type: Number, default: 0 },
   dailyLogin: { type: Boolean, default: false },
-  availability: { type: Boolean, default: true },
+  availability: { type: Boolean, default:false },
   role: { type: String, default: "worker" }, // Add role field
   isVerified: { type: Boolean, default: false },
   isBlocked: { type: Boolean, default: false } // New field added here

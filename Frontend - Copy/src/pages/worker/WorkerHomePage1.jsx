@@ -245,7 +245,7 @@ const WorkerHomePage1 = () => {
             <div className="row">
               {clientRequests.map((request) => (
                 <div key={request._id} className="col-md-6 mb-3">
-                  <Card style={cardStyle}>
+                  <Card >
                     <Card.Body>
                       <Card.Title>Name: {request.userName}</Card.Title>
                       <Card.Text>

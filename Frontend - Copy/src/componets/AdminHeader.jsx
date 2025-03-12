@@ -7,12 +7,21 @@ import { useWorkerContext } from "../WorkerContext1"; // Import context
 const AdminHeader = () => {
   const navigate = useNavigate();
   const { pendingRequests } = useWorkerContext(); // Get pending requests from context
+  
 
+  const handleLogout = () => {
+    // Clear sessionStorage
+    sessionStorage.clear();
+   
+
+    // Navigate to the SelectUserType component
+    navigate('/select-user-type');
+  };
   return (
     <>
       <Navbar className="admin-header" expand="lg" fixed="top">
         <Container fluid>
-          <Navbar.Brand className="text-white fw-bold">Service App</Navbar.Brand>
+          <Navbar.Brand className="text-white fw-bold">QuickFix</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="mx-auto gap-5">
@@ -39,7 +48,7 @@ const AdminHeader = () => {
             </Nav>
 
             <div className="d-flex align-items-center">
-              <Button variant="danger" className="rounded-pill">
+              <Button onClick={handleLogout} variant="danger" className="rounded-pill">
                 Logout <i className="fas fa-sign-out-alt ms-1"></i>
               </Button>
             </div>

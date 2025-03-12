@@ -56,15 +56,7 @@ const SelectUserType = () => {
         </div>
       </div>
 
-      <div>
-        <Link
-          className="decoration-none"
-          onClick={() => handleUserTypeSelection("admin")}
-          to="/login"
-        >
-          Login as admin
-        </Link>
-      </div>
+      
     </>
   );
 };
